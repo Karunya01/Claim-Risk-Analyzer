@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Claims Risk Predictor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="hero-left">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L2 7v7c0 5 10 8 10 8s10-3 10-8V7L12 2z" /></svg>
+      </div>
+      <div class="hero-right">
+        <h1>Claims Risk Predictor</h1>
+        <p class="muted">Interactive tool to explore how different factors affect insurance claim probability</p>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- inputs -->
+      <section class="panel">
+        <h2>Risk Factors</h2>
+
+        <div class="row">
+          <label>Age: <strong id="ageLabel">35</strong> years</label>
+          <input id="age" type="range" min="18" max="80" value="35" />
+        </div>
+
+        <div class="row">
+          <label>Driving Experience: <strong id="expLabel">10</strong> years</label>
+          <input id="drivingExperience" type="range" min="0" max="50" value="10" />
+        </div>
+
+        <div class="row">
+          <label>Previous Claims (last 5 years): <strong id="claimsLabel">0</strong></label>
+          <input id="previousClaims" type="range" min="0" max="10" value="0" />
+        </div>
+
+        <div class="row">
+          <label>Vehicle Age: <strong id="vehLabel">5</strong> years</label>
+          <input id="vehicleAge" type="range" min="0" max="20" value="5" />
+        </div>
+
+        <div class="row">
+          <label>Annual Mileage: <strong id="mileLabel">12,000</strong> miles</label>
+          <input id="annualMileage" type="range" min="1000" max="50000" step="1000" value="12000" />
+        </div>
+
+        <div class="row">
+          <label>Credit Score: <strong id="creditLabel">700</strong></label>
+          <input id="creditScore" type="range" min="300" max="850" value="700" />
+        </div>
+
+        <div class="row half">
+          <label>Location Type</label>
+          <select id="location">
+            <option value="rural">Rural</option>
+            <option value="suburban" selected>Suburban</option>
+            <option value="urban">Urban</option>
+          </select>
+        </div>
+
+        <div class="row half">
+          <label>Profession</label>
+          <select id="profession">
+            <option value="office_worker" selected>Office Worker</option>
+            <option value="healthcare">Healthcare</option>
+            <option value="sales">Sales</option>
+            <option value="delivery">Delivery Driver</option>
+            <option value="construction">Construction</option>
+            <option value="student">Student</option>
+            <option value="retired">Retired</option>
+          </select>
+        </div>
+
+        <div class="row full">
+          <label>Coverage Type</label>
+          <select id="coverage">
+            <option value="basic">Basic</option>
+            <option value="standard" selected>Standard</option>
+            <option value="comprehensive">Comprehensive</option>
+          </select>
+        </div>
+
+      </section>
+
+      <!-- results -->
+      <section class="panel results">
+        <h2>Risk Assessment</h2>
+
+        <div class="scoreCard" id="scoreCard">
+          <div class="scoreHeader">
+            <div>
+              <h3>Risk Score</h3>
+              <div class="scoreValue" id="riskScore">0.0 / 100</div>
+            </div>
+            <div id="riskIcon" class="iconWrap"></div>
+          </div>
+
+          <div class="progressWrap">
+            <div class="meta">
+              <span id="riskLevel">Very Low</span>
+              <span id="scorePercent">0%</span>
+            </div>
+            <div class="progressBar">
+              <div id="progress" class="progressFill" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel small">
+          <h4>Premium Impact</h4>
+          <div class="flexBetween">
+            <span>Base Premium:</span><strong>$1,200 / year</strong>
+          </div>
+          <div class="flexBetween">
+            <span>Risk Multiplier:</span><strong id="multiplier">1.0x</strong>
+          </div>
+          <div class="separator"></div>
+          <div class="flexBetween big">
+            <span>Estimated Premium:</span><strong id="estimate">$1,200 / year</strong>
+          </div>
+        </div>
+
+        <div class="panel small">
+          <h4>Key Risk Indicators</h4>
+          <ul id="indicators" class="indicators">
+            <!-- populated by JS -->
+          </ul>
+        </div>
+
+        <div class="panel small green">
+          <h4>Risk Reduction Tips</h4>
+          <ul>
+            <li>Take defensive driving courses</li>
+            <li>Install safety & anti-theft devices</li>
+            <li>Try usage-based insurance</li>
+            <li>Maintain clean driving record</li>
+            <li>Improve credit score</li>
+          </ul>
+        </div>
+
+      </section>
+    </main>
+
+    <footer class="muted center">Simple demo — client-side calculation. Use for training or exploration.</footer>
+  </div>
+
+  <script>
+    // initial state
+    const state = {
+      age: 35,
+      drivingExperience: 10,
+      previousClaims: 0,
+      vehicleAge: 5,
+      annualMileage: 12000,
+      creditScore: 700,
+      location: 'suburban',
+      profession: 'office_worker',
+      coverage: 'standard'
+    };
+
+    // multipliers
+    const locationRisk = { urban: 1.3, suburban: 1.0, rural: 0.8 };
+    const professionRisk = {
+      office_worker: 1.0,
+      healthcare: 0.9,
+      sales: 1.1,
+      delivery: 1.4,
+      construction: 1.2,
+      student: 1.15,
+      retired: 0.85
+    };
+    const coverageRisk = { basic: 0.9, standard: 1.0, comprehensive: 1.1 };
+
+    // elements
+    const el = id => document.getElementById(id);
+    const inputs = {
+      age: el('age'),
+      drivingExperience: el('drivingExperience'),
+      previousClaims: el('previousClaims'),
+      vehicleAge: el('vehicleAge'),
+      annualMileage: el('annualMileage'),
+      creditScore: el('creditScore'),
+      location: el('location'),
+      profession: el('profession'),
+      coverage: el('coverage')
+    };
+
+    // labels
+    const labels = {
+      age: el('ageLabel'),
+      exp: el('expLabel'),
+      claims: el('claimsLabel'),
+      veh: el('vehLabel'),
+      mile: el('mileLabel'),
+      credit: el('creditLabel')
+    };
+
+    // result elements
+    const riskScoreEl = el('riskScore');
+    const riskLevelEl = el('riskLevel');
+    const scorePercentEl = el('scorePercent');
+    const progressEl = el('progress');
+    const multiplierEl = el('multiplier');
+    const estimateEl = el('estimate');
+    const indicatorsEl = el('indicators');
+    const riskIcon = el('riskIcon');
+
+    // utility: add commas
+    function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
+    // calculation (mirrors your React logic)
+    function calculateRisk(s) {
+      let score = 0;
+
+      // Age factor (U-shaped)
+      if (s.age < 25) {
+        score += (25 - s.age) * 2;
+      } else if (s.age > 65) {
+        score += (s.age - 65) * 1.5;
+      }
+
+      // Driving experience (inverse)
+      if (s.drivingExperience < 5) {
+        score += (5 - s.drivingExperience) * 8;
+      }
+
+      // Previous claims (exponential)
+      score += s.previousClaims * s.previousClaims * 15;
+
+      // Vehicle age beyond 3 years
+      score += Math.max(0, s.vehicleAge - 3) * 2;
+
+      // Annual mileage - every 1000 miles above 10k adds 3 points
+      score += Math.max(0, (s.annualMileage - 10000) / 1000) * 3;
+
+      // Credit score low penalty
+      if (s.creditScore < 650) {
+        score += (650 - s.creditScore) / 10;
+      }
+
+      // Apply multipliers
+      score *= (locationRisk[s.location] || 1.0);
+      score *= (professionRisk[s.profession] || 1.0);
+      score *= (coverageRisk[s.coverage] || 1.0);
+
+      // normalize 0-100
+      const normalized = Math.min(100, Math.max(0, score));
+      return normalized;
+    }
+
+    // map score to level & multiplier
+    function mapLevel(score) {
+      if (score < 20) return { level: 'Very Low', mult: 0.8 };
+      if (score < 40) return { level: 'Low', mult: 0.9 };
+      if (score < 60) return { level: 'Medium', mult: 1.0 };
+      if (score < 80) return { level: 'High', mult: 1.3 };
+      return { level: 'Very High', mult: 1.6 };
+    }
+
+    function getColorClass(score) {
+      if (score < 20) return 'green';
+      if (score < 40) return 'yellow';
+      if (score < 60) return 'orange';
+      if (score < 80) return 'red';
+      return 'darkred';
+    }
+
+    // update UI
+    function render() {
+      // labels
+      labels.age.textContent = state.age;
+      labels.exp.textContent = state.drivingExperience;
+      labels.claims.textContent = state.previousClaims;
+      labels.veh.textContent = state.vehicleAge;
+      labels.mile.textContent = fmt(state.annualMileage);
+      labels.credit.textContent = state.creditScore;
+
+      // calculate
+      const score = calculateRisk(state);
+      const scoreRound = Math.round(score * 10) / 10; // one decimal
+      const mapping = mapLevel(score);
+
+      riskScoreEl.textContent = `${scoreRound.toFixed(1)} / 100`;
+      riskLevelEl.textContent = mapping.level;
+      scorePercentEl.textContent = `${scoreRound.toFixed(1)}%`;
+      progressEl.style.width = `${score}%`;
+      multiplierEl.textContent = mapping.mult + 'x';
+      estimateEl.textContent = `$${Math.round(1200 * mapping.mult).toLocaleString()} / year`;
+
+      // color classes
+      const color = getColorClass(score);
+      const scoreCard = document.getElementById('scoreCard');
+      scoreCard.className = `scoreCard ${color}`;
+
+      // icon
+      riskIcon.innerHTML = (score < 40) ? `
+        <svg class="shield" viewBox="0 0 24 24"><path d="M12 2L3 6v6c0 6 9 10 9 10s9-4 9-10V6l-9-4z"/></svg>
+      ` : `
+        <svg class="warn" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
+      `;
+
+      // indicators
+      const ind = [];
+      if (state.previousClaims > 2) ind.push({ text: 'High previous claims history', cls: 'danger' });
+      if (state.age < 25) ind.push({ text: 'Young driver (higher risk)', cls: 'warning' });
+      if (state.drivingExperience < 3) ind.push({ text: 'Limited driving experience', cls: 'warning' });
+      if (state.annualMileage > 20000) ind.push({ text: 'High annual mileage', cls: 'notice' });
+      if (state.creditScore < 600) ind.push({ text: 'Poor credit score', cls: 'danger' });
+      if (score < 30) ind.push({ text: 'Low risk profile - excellent driving record', cls: 'safe' });
+
+      indicatorsEl.innerHTML = ind.map(i => `<li class="${i.cls}">${i.text}</li>`).join('');
+    }
+
+    // wire inputs to state and render
+    Object.keys(inputs).forEach(key => {
+      const node = inputs[key];
+      node.addEventListener('input', (e) => {
+        const val = (node.type === 'range') ? parseInt(node.value, 10) : node.value;
+        state[key] = val;
+        render();
+      });
+      // also update on change for selects
+      node.addEventListener('change', (e) => {
+        if (node.tagName === 'SELECT') {
+          state[key] = node.value;
+          render();
+        }
+      });
+    });
+
+    // initial render
+    render();
+  </script>
+</body>
+</html>

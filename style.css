@@ -1,0 +1,73 @@
+/* styles.css - simple, no frameworks */
+:root{
+  --bg:#f7fafc;
+  --panel:#ffffff;
+  --muted:#6b7280;
+  --accent:#2563eb;
+  --green:#10b981;
+  --yellow:#f59e0b;
+  --orange:#f97316;
+  --red:#ef4444;
+  --darkred:#b91c1c;
+  --card-border: #e6edf8;
+}
+*{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+body{margin:0;background:var(--bg);color:#111827}
+.container{max-width:1100px;margin:28px auto;padding:18px}
+.hero{display:flex;align-items:center;gap:14px;background:linear-gradient(90deg,#0ea5e9, #2563eb);color:white;padding:18px;border-radius:8px}
+.hero .icon{width:48px;height:48px;fill:white;opacity:.95}
+.hero h1{margin:0;font-size:20px}
+.muted{color:var(--muted)}
+.center{text-align:center}
+.grid{display:grid;grid-template-columns:1fr 420px;gap:18px;margin-top:18px}
+.panel{background:var(--panel);padding:16px;border-radius:8px;border:1px solid #e6eef8}
+.panel h2{margin:0 0 12px 0;font-size:16px}
+.row{margin-bottom:12px}
+.row label{display:block;margin-bottom:6px;color:#374151;font-size:13px}
+input[type=range]{width:100%}
+select{width:100%;padding:8px;border-radius:6px;border:1px solid #d1d5db}
+.row.half{width:48%;display:inline-block}
+.row.full{width:100%}
+.results{padding-bottom:24px}
+
+/* score card */
+.scoreCard{padding:12px;border-radius:8px;border-left:6px solid var(--card-border)}
+.scoreCard .scoreHeader{display:flex;justify-content:space-between;align-items:center}
+.scoreCard h3{margin:0;color:#374151}
+.scoreValue{font-size:28px;font-weight:700;margin-top:6px}
+.iconWrap{width:56px;height:56px;display:flex;align-items:center;justify-content:center}
+.scoreCard.green{background:#ecfdf5;border-left-color:#10b981}
+.scoreCard.yellow{background:#fffbeb;border-left-color:#f59e0b}
+.scoreCard.orange{background:#fff7ed;border-left-color:#f97316}
+.scoreCard.red{background:#fff1f2;border-left-color:#ef4444}
+.scoreCard.darkred{background:#fee2e2;border-left-color:#b91c1c}
+
+.progressWrap{margin-top:12px}
+.meta{display:flex;justify-content:space-between;color:#6b7280;font-size:13px;margin-bottom:6px}
+.progressBar{height:12px;background:#e6e6e6;border-radius:999px;overflow:hidden}
+.progressFill{height:100%;width:0%;background:linear-gradient(90deg,#10b981,#34d399);transition:width .4s ease}
+
+/* color variants (override gradient) */
+.scoreCard.yellow .progressFill{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.scoreCard.orange .progressFill{background:linear-gradient(90deg,#f97316,#fb923c)}
+.scoreCard.red .progressFill{background:linear-gradient(90deg,#ef4444,#fb7185)}
+.scoreCard.darkred .progressFill{background:linear-gradient(90deg,#b91c1c,#ef4444)}
+
+.small{margin-top:12px}
+.small h4{margin:0 0 8px 0;font-size:14px}
+.flexBetween{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.separator{height:1px;background:#e6eef8;margin:6px 0}
+.big{font-size:18px}
+
+.indicators{list-style:none;padding-left:0;margin:0}
+.indicators li{padding:6px 0;border-bottom:1px dashed #f1f5f9;font-size:13px}
+.indicators li.danger{color:var(--red)}
+.indicators li.warning{color:var(--orange)}
+.indicators li.notice{color:var(--yellow)}
+.indicators li.safe{color:var(--green)}
+
+footer{margin-top:18px;color:var(--muted)}
+/* icons */
+.shield, .warn { width:48px;height:48px;fill:currentColor; }
+.scoreCard.green .shield{color:#047857}
+.scoreCard.red .warn{color:#c0262e}
